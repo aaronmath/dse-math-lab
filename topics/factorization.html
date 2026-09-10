@@ -1,1 +1,236 @@
-<!DOCTYPE html><html lang="zh-HK"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>因式分解｜動數 Lab</title><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/><link rel="stylesheet" href="../css/style.css"/></head><body><div class="bg-grid"></div><nav class="top"><div class="nav-inner"><a class="brand" href="../index.html"><span class="logo">動</span>動數 Lab</a><div class="nav-links"><a class="active" href="factorization.html">因式分解</a><a href="exponents.html">指數定律</a><a href="triangles.html">相似／全等</a><a href="ratios.html">面積與體積比</a></div></div></nav><div class="wrap"><header class="hero" data-reveal><div class="kicker">Topic 01</div><h1>因式分解 <span>Factorization</span></h1><p class="lead">把多項式拆成因式相乘。DSE 卷一甲部幾乎年年出現。</p></header><section class="section panel" data-reveal><h2 style="margin-top:0">解題順序</h2><div class="steps"><div class="step"><div class="num">1</div><div>先抽公因式</div></div><div class="step"><div class="num">2</div><div>恆等式</div></div><div class="step"><div class="num">3</div><div>十字相乘</div></div><div class="step"><div class="num">4</div><div>併項 grouping</div></div></div></section><footer><a href="../index.html" style="color:var(--teal)">← 返主頁</a></footer></div><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script defer src="../js/main.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>因式分解｜動數 Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+.lab-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
+@media(max-width:980px){.lab-grid{grid-template-columns:1fr}}
+.expr-board{min-height:88px;display:flex;align-items:center;justify-content:center;font-size:clamp(22px,3.4vw,34px);font-weight:800;padding:16px;text-align:center}
+.lights{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.light{border:1px solid var(--line);background:#0a1220;border-radius:14px;padding:10px 8px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;font-weight:700}
+.light:hover{border-color:rgba(94,234,212,.35);color:var(--text)}
+.light.on{border-color:var(--teal);color:var(--teal)}
+.light.bad{border-color:#fb7185;color:#fb7185}
+.light .sub{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:3px}
+.redb{color:#fb7185;font-weight:800}
+.outf{color:var(--teal)}
+.front{color:#67e8f9}
+.back{color:#fbbf24}
+.step-log{min-height:72px;color:var(--muted);line-height:1.7;font-size:14.5px}
+.fill-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.fill-row input{background:#0a1220;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;min-width:120px;font-size:15px}
+.okbox{color:#6ee7b7;font-weight:700}
+.badbox{color:#fda4af;font-weight:700}
+.calc-wrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.calc{width:230px;background:#cfd4dc;border-radius:18px;padding:10px;color:#111;box-shadow:0 16px 40px rgba(0,0,0,.35);font-family:Arial,sans-serif}
+.calc-top{font-size:10px;font-weight:800;letter-spacing:.08em;color:#333;display:flex;justify-content:space-between}
+.lcd{background:#9eaa9a;border-radius:4px;height:48px;margin:8px 2px 10px;padding:6px 8px;font-family:"Courier New",monospace;font-weight:700;font-size:13px;color:#142014;box-shadow:inset 0 0 0 2px #6d7868;display:flex;flex-direction:column;justify-content:center}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.k{height:26px;border-radius:6px;background:#2b3138;color:#eee;font-size:10px;font-weight:700;display:grid;place-items:center}
+.k.fn{background:#3b424c}
+.k.org{background:#e36b2c;color:#fff}
+.k.hit{outline:2px solid #22d3ee;box-shadow:0 0 12px #22d3ee}
+.photo{width:160px;height:auto;filter:drop-shadow(0 12px 24px rgba(0,0,0,.45))}
+.pathbar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<nav class="top"><div class="nav-inner">
+<a class="brand" href="../index.html"><span class="logo">動</span>動數 Lab</a>
+<div class="nav-links">
+<a class="active" href="factorization.html">因式分解</a>
+<a href="exponents.html">指數定律</a>
+<a href="triangles.html">相似／全等</a>
+<a href="ratios.html">面積與體積比</a>
+</div></div></nav>
+<div class="wrap">
+<header class="hero">
+<div class="kicker">Topic 01 · 三招流水線</div>
+<h1>因式分解 <span>Factorization</span></h1>
+<p class="lead">只問三句：有円公因式？係咪平方減平方？係咪三項入 FMLA 01？負號連公因式一齊抄出外面。平方差用（前+後）（前−後）。01 出根之後，因式正負相反。</p>
+</header>
+<div class="pathbar">
+<button class="chip active" data-pool="mix">隨機</button>
+<button class="chip" data-pool="cf">只抽公因</button>
+<button class="chip" data-pool="dos">只平方差</button>
+<button class="chip" data-pool="cf_dos">抽完 → 平方差</button>
+<button class="chip" data-pool="fmla">只 FMLA 01</button>
+<button class="chip" data-pool="cf_fmla">抽完 → 01</button>
+</div>
+<div class="lab-grid">
+<div class="panel">
+<div style="color:var(--gold);font-size:12px" id="meta">PATH</div>
+<div class="stage expr-board" id="board"></div>
+<div class="lights">
+<button class="light" data-pick="cf">① 抽公因式<span class="sub">抄一次，其餘入括號</span></button>
+<button class="light" data-pick="dos">② 平方差<span class="sub">（前+後）（前−後）</span></button>
+<button class="light" data-pick="fmla">③ FMLA 01<span class="sub">三項 → 根 → 因式</span></button>
+</div>
+<div class="controls">
+<button class="btn btn-primary" id="btn-step">下一步</button>
+<button class="btn btn-ghost" id="btn-replay">重播呢拍</button>
+<button class="btn btn-ghost" id="btn-new">下一題</button>
+</div>
+<div class="step-log" id="log">先擇上面一盎燈。擇對先播動畫。</div>
+<div class="fill-row" id="fill"></div>
+<p class="note" id="verdict"></p>
+</div>
+<div class="panel">
+<h3 style="margin-top:0">fx-50FH II · FMLA 01</h3>
+<p class="note">按鍵：橙色 FMLA → 01 → EXE → 順住入 a、b、c，每次 EXE。屏幕出兩條根，再寫因式（根 2 同 −3 → (x−2)(x+3)）。</p>
+<div class="calc-wrap">
+<div class="calc">
+<div class="calc-top"><span>CASIO</span><span>fx-50FH II</span></div>
+<div class="lcd" id="lcd">準備<br>FMLA 01</div>
+<div class="keys" id="keys"></div>
+</div>
+</div>
+<p class="warn" style="margin-top:12px">減兩項、後項多過一截時用<span class="redb">紅色括號</span>鎖住成舊。</p>
+</div>
+</div>
+<section class="section panel">
+<h2 style="margin-top:0">課堂口訣</h2>
+<div class="steps">
+<div class="step"><div class="num">1</div><div>公因式抄一次出外面（負號一齊出去），剩餘由左至右抄入括號。</div></div>
+<div class="step"><div class="num">2</div><div>平方差 ＝（前+後）（前−後）。前／後可以係整括號。</div></div>
+<div class="step"><div class="num">3</div><div>三項先入 FMLA 01 求根。正根寫減，負根寫加。</div></div>
+</div>
+</section>
+<footer><a href="../index.html" style="color:var(--teal)">← 返主頁</a></footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="../js/main.js"></script>
+<script>
+const KEYS=[["SHIFT","ALPHA","MODE","SETUP","ON"],["FMLA","x2","sqrt","log","ln"],["RCL","ENG","(",")","M+"],["7","8","9","DEL","AC"],["4","5","6","x","/"],["1","2","3","+","-"],["0",".","EXP","Ans","EXE"]];
+const keysEl=document.getElementById("keys");
+KEYS.flat().forEach(name=>{
+  const d=document.createElement("div");
+  d.className="k"+(name==="FMLA"?" org":(["SHIFT","ALPHA","MODE","SETUP","ON","DEL","AC"].includes(name)?" fn":""));
+  d.dataset.key=name; d.textContent=name; keysEl.appendChild(d);
+});
+function hit(name){keysEl.querySelectorAll(".k").forEach(k=>k.classList.toggle("hit",k.dataset.key===name));}
+function lcd(t){document.getElementById("lcd").innerHTML=t;}
+const BANK={
+ cf:[
+  {html:"6a^2 + 9a",path:["cf"],cf:"3a",inside:"2a+3",ans:"3a(2a+3)",fill:"3a(2a+3)"},
+  {html:"4x + 8",path:["cf"],cf:"4",inside:"x+2",ans:"4(x+2)",fill:"4(x+2)"},
+  {html:"-2x - 6",path:["cf"],cf:"-2",inside:"x+3",ans:"-2(x+3)",fill:"-2(x+3)"},
+  {html:"-3a^2 + 6a",path:["cf"],cf:"-3a",inside:"a-2",ans:"-3a(a-2)",fill:"-3a(a-2)"},
+  {html:"3x^2 y - 6xy",path:["cf"],cf:"3xy",inside:"x-2",ans:"3xy(x-2)",fill:"3xy(x-2)"}
+ ],
+ dos:[
+  {html:"x^2 - 9",path:["dos"],front:"x",back:"3",ans:"(x+3)(x-3)",fill:"(x+3)(x-3)"},
+  {html:"4a^2 - 25",path:["dos"],front:"2a",back:"5",ans:"(2a+5)(2a-5)",fill:"(2a+5)(2a-5)"},
+  {html:"(2x+y)^2 - 4",path:["dos"],front:"(2x+y)",back:"2",ans:"(2x+y+2)(2x+y-2)",fill:"(2x+y+2)(2x+y-2)"},
+  {html:"9 - (3x-1)^2",path:["dos"],front:"3",back:"(3x-1)",ans:"[3+(3x-1)][3-(3x-1)]",fill:"(3+(3x-1))(3-(3x-1))",redBack:true},
+  {html:"(4x-y)^2 - (3x+2)^2",path:["dos"],front:"(4x-y)",back:"(3x+2)",ans:"[(4x-y)+(3x+2)][(4x-y)-(3x+2)]",fill:"((4x-y)+(3x+2))((4x-y)-(3x+2))",redBack:true}
+ ],
+ cf_dos:[
+  {html:"2x^2 - 8",path:["cf","dos"],cf:"2",inside:"x^2-4",front:"x",back:"2",ans:"2(x+2)(x-2)",fill:"2(x+2)(x-2)"},
+  {html:"3a^2 b - 12b",path:["cf","dos"],cf:"3b",inside:"a^2-4",front:"a",back:"2",ans:"3b(a+2)(a-2)",fill:"3b(a+2)(a-2)"}
+ ],
+ fmla:[
+  {html:"x^2 + 5x + 6",path:["fmla"],a:1,b:5,c:6,roots:["-2","-3"],ans:"(x+2)(x+3)",fill:"(x+2)(x+3)",fillRoots:"-2,-3"},
+  {html:"x^2 - 7x + 12",path:["fmla"],a:1,b:-7,c:12,roots:["4","3"],ans:"(x-4)(x-3)",fill:"(x-4)(x-3)",fillRoots:"4,3"},
+  {html:"x^2 - x - 6",path:["fmla"],a:1,b:-1,c:-6,roots:["3","-2"],ans:"(x-3)(x+2)",fill:"(x-3)(x+2)",fillRoots:"3,-2"},
+  {html:"x^2 + x - 6",path:["fmla"],a:1,b:1,c:-6,roots:["2","-3"],ans:"(x-2)(x+3)",fill:"(x-2)(x+3)",fillRoots:"2,-3"}
+ ],
+ cf_fmla:[
+  {html:"2x^2 + 10x + 12",path:["cf","fmla"],cf:"2",inside:"x^2+5x+6",a:1,b:5,c:6,roots:["-2","-3"],ans:"2(x+2)(x+3)",fill:"2(x+2)(x+3)",fillRoots:"-2,-3"}
+ ]
+};
+let pool="mix",Q=null,phase="pick",stepI=0,script=[],expectedPick=null;
+function mixQ(){const keys=Object.keys(BANK);const k=keys[Math.floor(Math.random()*keys.length)];const arr=BANK[k];return Object.assign({pool:k},arr[Math.floor(Math.random()*arr.length)]);}
+function drawQ(){
+  Q=pool==="mix"?mixQ():Object.assign({pool},BANK[pool][Math.floor(Math.random()*BANK[pool].length)]);
+  expectedPick=Q.path[0]; phase="pick"; stepI=0; script=buildScript(Q);
+  document.getElementById("meta").textContent="先擇第一招";
+  document.getElementById("board").innerHTML=Q.html;
+  document.getElementById("log").textContent="望條式：有円公因式？兩項平方減平方？定三項二次？擇一盎燈。";
+  document.getElementById("verdict").textContent=""; document.getElementById("fill").innerHTML="";
+  document.querySelectorAll(".light").forEach(l=>l.classList.remove("on","bad"));
+  hit(""); lcd("準備<br>FMLA 01");
+}
+function buildScript(q){
+  const s=[];
+  if(q.path.includes("cf")&&q.cf){
+    s.push({type:"cf1",text:"公因式係 "+q.cf+"。連符號抄一次出外面。"});
+    s.push({type:"cf2",text:"剩餘由左至右入括號："+q.cf+"("+q.inside+")"});
+  }
+  if(q.path.includes("dos")){
+    s.push({type:"dos1",text:"前 = "+q.front+"，後 = "+q.back});
+    s.push({type:"dos2",text:"口訣（前+後）（前-後）"});
+    s.push({type:"dos3",text:"寫成 "+q.ans});
+  }
+  if(q.path.includes("fmla")){
+    s.push({type:"f0",text:"三項二次。a="+q.a+", b="+q.b+", c="+q.c});
+    s.push({type:"fFMLA",text:"撲橙色 FMLA。"});
+    s.push({type:"f01",text:"輸入 01，再 EXE。"});
+    s.push({type:"fa",text:"輸入 a = "+q.a+"，EXE。"});
+    s.push({type:"fb",text:"輸入 b = "+q.b+"，EXE。"});
+    s.push({type:"fc",text:"輸入 c = "+q.c+"，EXE。"});
+    s.push({type:"fr1",text:"第一條根 x = "+q.roots[0]});
+    s.push({type:"fr2",text:"第二條根 x = "+q.roots[1]});
+    s.push({type:"ffac",text:"正負相反寫因式："+q.ans});
+  }
+  return s;
+}
+function showStep(){
+  const st=script[stepI];
+  if(!st){phase="done";document.getElementById("meta").textContent="完成 · "+Q.ans;document.getElementById("log").innerHTML="答案：<b>"+Q.ans+"</b>";renderFill();return;}
+  document.getElementById("log").innerHTML="第 "+(stepI+1)+"/"+script.length+" 拍："+st.text;
+  applyAnim(st);
+}
+function applyAnim(st){
+  hit("");
+  if(st.type==="cf2") document.getElementById("board").innerHTML=Q.cf+"("+Q.inside+")";
+  if(st.type==="dos3"||st.type==="ffac") document.getElementById("board").innerHTML=Q.ans;
+  if(st.type==="fFMLA"){hit("FMLA");lcd("FMLA<br>No?");}
+  if(st.type==="f01"){hit("1");lcd("01<br>Quadratic");}
+  if(st.type==="fa"){hit("EXE");lcd("a=?<br>"+Q.a);}
+  if(st.type==="fb"){hit("EXE");lcd("b=?<br>"+Q.b);}
+  if(st.type==="fc"){hit("EXE");lcd("c=?<br>"+Q.c);}
+  if(st.type==="fr1"){hit("EXE");lcd("x1=<br>"+Q.roots[0]);}
+  if(st.type==="fr2"){hit("EXE");lcd("x2=<br>"+Q.roots[1]);}
+}
+function renderFill(){
+  const box=document.getElementById("fill");
+  if(Q.fillRoots) box.innerHTML='Root <input id="in-r" placeholder="-2,-3"/> Factor <input id="in-a" placeholder="(x+2)(x+3)"/> <button class="btn btn-primary" id="chk">Check</button>';
+  else box.innerHTML='Ans <input id="in-a" placeholder="'+Q.fill+'"/> <button class="btn btn-primary" id="chk">Check</button>';
+  document.getElementById("chk").onclick=check;
+}
+function norm(s){return (s||"").replace(/\s+/g,"").replace(/−/g,"-").replace(/（/g,"(").replace(/）/g,")");}
+function check(){
+  const v=document.getElementById("verdict");
+  const ans=norm(document.getElementById("in-a").value);
+  const okA=ans===norm(Q.fill)||ans===norm(Q.ans);
+  let okR=true;
+  if(Q.fillRoots){
+    const r=norm(document.getElementById("in-r").value);
+    const want=Q.fillRoots.split(",").map(norm).sort().join(",");
+    const got=r.split(/[,，]/).map(norm).sort().join(",");
+    okR=got===want;
+  }
+  v.innerHTML=(okA&&okR)?'<span class="okbox">OK</span>':'<span class="badbox">Wrong</span> 2 and -3 -> (x-2)(x+3)';
+}
+document.querySelectorAll("[data-pool]").forEach(b=>b.onclick=()=>{pool=b.dataset.pool;document.querySelectorAll("[data-pool]").forEach(x=>x.classList.toggle("active",x===b));drawQ();});
+document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{
+  if(phase!=="pick")return;
+  const pick=b.dataset.pick;
+  document.querySelectorAll(".light").forEach(l=>l.classList.remove("on","bad"));
+  if(pick===expectedPick){b.classList.add("on");phase="play";document.getElementById("meta").textContent="path: "+Q.path.join(" -> ");document.getElementById("log").textContent="OK. Next step.";}
+  else{b.classList.add("bad");document.getElementById("log").textContent="Wrong first move. Try again.";}
+});
+document.getElementById("btn-step").onclick=()=>{if(phase==="pick"){document.getElementById("log").textContent="Pick a light first.";return;}if(phase==="done"){renderFill();return;}showStep();stepI++;};
+document.getElementById("btn-replay").onclick=()=>{if(phase!=="play"&&phase!=="done")return;stepI=Math.max(0,stepI-1);phase="play";showStep();};
+document.getElementById("btn-new").onclick=drawQ;
+drawQ();
+</script>
+</body>
+</html>
