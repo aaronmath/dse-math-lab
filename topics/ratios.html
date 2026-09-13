@@ -8,20 +8,19 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
 <link rel="stylesheet" href="../css/style.css"/>
 <style>
-.lab{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
-@media(max-width:960px){.lab{grid-template-columns:1fr}}
-.filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
-.stage-3d{min-height:420px;border-radius:18px;background:radial-gradient(circle at 50% 12%,rgba(94,234,212,.1),transparent 42%),#080e1a;border:1px solid var(--line);position:relative;overflow:hidden}
-.stage-3d canvas{display:block;width:100%;height:420px}
-.layer-card{border:1px solid var(--line);border-radius:16px;padding:12px 12px 10px;margin-bottom:10px;background:#0a1220}
-.layer-card h4{margin:0 0 6px;font-size:14px}
-.ratio3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center}
-.ratio3 b{display:block;font-size:16px;color:var(--teal)}
-.ratio3 span{font-size:11px;color:var(--muted)}
-.arrow-lab{font-size:12px;color:var(--gold);margin:4px 0 8px}
-.cutbox{margin-top:10px}
-.cutbox label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
-.mini-cubes{display:flex;gap:28px;align-items:end;justify-content:center;min-height:160px;padding:16px}
+.lab{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.9fr);gap:16px;align-items:start}
+@media(max-width:900px){.lab{grid-template-columns:1fr}}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.stage-3d{border-radius:18px;background:radial-gradient(circle at 50% 12%,rgba(94,234,212,.1),transparent 42%),#080e1a;border:1px solid var(--line);overflow:hidden}
+.stage-3d canvas{display:block;width:100%;height:440px}
+.layer-card{border:1px solid var(--line);border-left-width:5px;border-radius:14px;padding:10px 12px;margin-bottom:10px;background:#0a1220}
+.layer-card h4{margin:0 0 4px;font-size:14px}
+.ratio3{display:grid;grid-template-columns:1fr;gap:4px}
+.ratio3 div{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.ratio3 b{color:var(--teal);font-size:14px;text-align:right}
+.arrow-lab{font-size:12px;margin:2px 0 6px}
+#eq{min-height:72px}
+input[type=number]{width:100%;margin-top:6px;background:#0a1220;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px}
 </style>
 </head>
 <body>
@@ -36,114 +35,182 @@
 </div></div></nav>
 <div class="wrap">
 <header class="hero">
-<div class="kicker">Topic 04 · 由尖量高</div>
+<div class="kicker">Topic 04 · 由尖量高 · 分母 H³</div>
 <h1>邊長比 · 面積比 · <span>體積比</span></h1>
-<p class="lead">錐體水平放置（底平行地面）。箭嘴永遠由尖量到該層遠離尖的面。所有比都係同原錐比，邊長比只顯示整數。</p>
+<p class="lead">底平行地面。箭嘴由該層遠面指向尖。體積比分母永遠係原錐 H³。左錐右比例，顏色對應層。</p>
 </header>
-<div class="filters" id="f-shape">
-<button class="chip active" data-shape="cone">圓錐</button>
-<button class="chip" data-shape="pyr">正方形底角錐</button>
+<div class="filters">
+<button class="chip active" data-k="shape" data-v="cone">圓錐</button>
+<button class="chip" data-k="shape" data-v="pyr">正方形底角錐</button>
 </div>
-<div class="filters" id="f-apex">
-<button class="chip active" data-apex="up">尖向上</button>
-<button class="chip" data-apex="down">尖向下</button>
+<div class="filters">
+<button class="chip active" data-k="apex" data-v="up">尖向上</button>
+<button class="chip" data-k="apex" data-v="down">尖向下</button>
 </div>
-<div class="filters" id="f-layers">
-<button class="chip" data-layers="1">不分層</button>
-<button class="chip active" data-layers="2">分 2 層</button>
-<button class="chip" data-layers="3">分 3 層</button>
+<div class="filters">
+<button class="chip" data-k="layers" data-v="1">不分層</button>
+<button class="chip active" data-k="layers" data-v="2">分 2 層</button>
+<button class="chip" data-k="layers" data-v="3">分 3 層</button>
+</div>
+<div class="filters">
+<button class="chip active" data-k="mode" data-v="form">未約簡（默認）</button>
+<button class="chip" data-k="mode" data-v="simp">已約簡整數比</button>
 </div>
 <div class="lab">
 <div class="panel">
-<div class="stage-3d"><canvas id="cv" width="720" height="420"></canvas></div>
+<div class="stage-3d"><canvas id="cv" width="720" height="440"></canvas></div>
 <div class="controls">
-<button class="btn btn-ghost" id="spin-l">← 左轉</button>
-<button class="btn btn-ghost" id="spin-r">右轉 →</button>
+<button class="btn btn-ghost" id="spin-l">左轉</button>
+<button class="btn btn-ghost" id="spin-r">右轉</button>
 <button class="btn btn-ghost" id="auto">自動轉</button>
-<button class="btn btn-ghost" id="reset">還原等分高</button>
+<button class="btn btn-ghost" id="reset">等分高</button>
 </div>
-<div class="cutbox" id="cuts"></div>
-<p class="note">預設等分高（2 層切在 3/6，3 層切在 2/6 同 4/6）。拖動會咬在整數格。</p>
+<label class="note" style="display:flex;justify-content:space-between;margin-top:10px">全高 H（任意正整數）<b id="hLab">6</b></label>
+<input type="range" id="hRange" min="3" max="24" step="1" value="6"/>
+<input type="number" id="hNum" min="2" max="99" step="1" value="6"/>
+<div id="cuts"></div>
 </div>
 <div class="panel">
-<p class="note" style="margin-top:0">右邊每層：箭嘴由尖 → 該層遠面。台體體積 = 大相似錐 − 細相似錐。</p>
+<p class="note" style="margin-top:0">卡色 = 錐體該層。默認體積 (h₂³ − h₁³) / H³。</p>
 <div id="cards"></div>
-<p class="warn">等分的係高，唔係體積。1:2 的細錐只佔原體積 1/8。</p>
 </div>
 </div>
 <section class="section panel">
 <h2 style="margin-top:0">點解係平方同立方？</h2>
 <p class="hint">長度放大 k，面積 ×k²，體積 ×k³。</p>
-<div class="mini-cubes">
-<div><div class="box" style="width:56px;height:56px;background:linear-gradient(135deg,#5eead4,#67e8f9)">1</div><p class="note" style="text-align:center">面積 1</p></div>
-<div><div class="box" style="width:112px;height:112px;background:linear-gradient(135deg,#fbbf24,#f59e0b)">4</div><p class="note" style="text-align:center">面積 k²</p></div>
-<div class="cube-wrap"><div class="cube"><div class="face" style="background:#a78bfa;transform:translateZ(36px)"></div><div class="face" style="background:#7c3aed;transform:rotateY(180deg) translateZ(36px)"></div><div class="face" style="background:#8b5cf6;transform:rotateY(90deg) translateZ(36px)"></div><div class="face" style="background:#6d28d9;transform:rotateY(-90deg) translateZ(36px)"></div><div class="face" style="background:#c4b5fd;transform:rotateX(90deg) translateZ(36px)"></div><div class="face" style="background:#5b21b6;transform:rotateX(-90deg) translateZ(36px)"></div></div><p class="note" style="text-align:center;margin-top:8px">體積 k³</p></div>
-</div>
-<div class="formula"><div class="tex" data-display="true" data-tex="\\dfrac{\\ell}{L}=\\dfrac{h}{H}=k\\qquad \\dfrac{A}{A_0}=k^{2}\\qquad \\dfrac{V}{V_0}=k^{3}"></div></div>
+<div class="formula" id="eq"></div>
 </section>
-<footer><a href="../index.html" style="color:var(--teal)">← 返主頁</a></footer>
+<footer><a href="../index.html" style="color:var(--teal)">返主頁</a></footer>
 </div>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="../js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="../js/main.js"></script>
 <script>
-const H=6;
-const state={shape:"cone",apex:"up",layers:2,cuts:[3],rot:0.55,auto:true};
-const COLORS=[["#2dd4bf","#0f766e"],["#fbbf24","#b45309"],["#a78bfa","#6d28d9"]];
-function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1;}
-function ratio(a,b){if(!a)return "0 : "+b;const g=gcd(a,b);return (a/g)+" : "+(b/g);}
-function pow3(n){return n*n*n;}
-function layerBounds(){const pts=[0,...state.cuts.slice().sort((a,b)=>a-b),H];const out=[];for(let i=0;i<pts.length-1;i++)out.push({lo:pts[i],hi:pts[i+1]});return out;}
-function setDefaultCuts(){if(state.layers===1)state.cuts=[];else if(state.layers===2)state.cuts=[3];else state.cuts=[2,4];}
+const S={shape:"cone",apex:"up",layers:2,mode:"form",H:6,cuts:[3],rot:.55,auto:true};
+const COL=[["#2dd4bf","#0f766e"],["#fbbf24","#b45309"],["#a78bfa","#6d28d9"]];
+function gcd(a,b){a=Math.abs(a|0);b=Math.abs(b|0);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function simp(a,b){if(!a)return "0 : "+b;const g=gcd(a,b);return (a/g)+" : "+(b/g);}
+function p3(n){return n*n*n;}
+function bounds(){const p=[0].concat(S.cuts.slice().sort(function(a,b){return a-b})).concat([S.H]);const o=[];for(let i=0;i<p.length-1;i++)o.push({lo:p[i],hi:p[i+1]});return o;}
+function equalCuts(){
+  if(S.layers===1)S.cuts=[];
+  else if(S.layers===2)S.cuts=[Math.max(1,Math.round(S.H/2))];
+  else{let a=Math.max(1,Math.round(S.H/3)),b=Math.max(a+1,Math.round(2*S.H/3));if(b>=S.H)b=S.H-1;if(a>=b)a=Math.max(1,b-1);S.cuts=[a,b];}
+}
+function clampCuts(){
+  S.cuts=S.cuts.map(function(c){return Math.min(S.H-1,Math.max(1,c|0));});
+  S.cuts=Array.from(new Set(S.cuts)).sort(function(a,b){return a-b;}).slice(0,Math.max(0,S.layers-1));
+  while(S.cuts.length<S.layers-1){let x=Math.round(S.H/2);while(S.cuts.indexOf(x)>=0&&x<S.H-1)x++;if(S.cuts.indexOf(x)<0)S.cuts.push(x);S.cuts.sort(function(a,b){return a-b;});}
+}
+function formLin(h){return S.mode==="form"?(h+" / "+S.H):simp(h,S.H);}
+function formArea(h){return S.mode==="form"?(h+"² / "+S.H+"²"):simp(h*h,S.H*S.H);}
+function formVol(lo,hi){
+  const num=p3(hi)-p3(lo),den=p3(S.H);
+  if(S.mode==="simp")return simp(num,den);
+  if(lo===0)return hi+"³ / "+S.H+"³";
+  return "("+hi+"³ \u2212 "+lo+"³) / "+S.H+"³";
+}
 function renderCuts(){
   const box=document.getElementById("cuts");
-  if(state.layers===1){box.innerHTML="";return;}
-  box.innerHTML=state.cuts.map((c,i)=>"<label>切面 "+(i+1)+"（離尖 "+c+" / "+H+"）<b>"+c+"</b></label><input type=range min=1 max=5 step=1 value="+c+" data-i="+i+">").join("");
-  box.querySelectorAll("input").forEach(inp=>{
-    inp.oninput=()=>{
-      const i=+inp.dataset.i; let v=+inp.value;
-      const others=state.cuts.filter((_,j)=>j!==i);
-      if(others.includes(v)) v=v<5?v+1:v-1;
-      state.cuts[i]=v;
-      if(state.cuts.length===2) state.cuts.sort((a,b)=>a-b);
-      renderCuts(); renderCards();
+  document.getElementById("hLab").textContent=S.H;
+  document.getElementById("hRange").value=String(Math.min(24,Math.max(3,S.H)));
+  document.getElementById("hNum").value=S.H;
+  if(S.layers===1){box.innerHTML="";return;}
+  box.innerHTML=S.cuts.map(function(c,i){return '<label>切面 '+(i+1)+'（離尖 h='+c+'）<b>'+c+'</b></label><input type="range" min="1" max="'+(S.H-1)+'" step="1" value="'+c+'" data-i="'+i+'">';}).join("");
+  box.querySelectorAll("input").forEach(function(inp){
+    inp.oninput=function(){
+      let v=+inp.value;const i=+inp.dataset.i;
+      const oth=S.cuts.filter(function(_,j){return j!==i;});
+      if(oth.indexOf(v)>=0)v=v<S.H-1?v+1:v-1;
+      S.cuts[i]=v;clampCuts();renderCuts();renderCards();
     };
   });
 }
 function renderCards(){
-  const el=document.getElementById("cards");
-  el.innerHTML=layerBounds().map((L,idx)=>{
-    const similarHi=ratio(L.hi,H);
-    const areaHi=ratio(L.hi*L.hi,H*H);
-    const volLayer=ratio(pow3(L.hi)-pow3(L.lo),pow3(H));
-    const kind=L.lo===0?"近尖 · 相似細錐":"台體 = 大相似錐 − 細相似錐";
-    const col=COLORS[idx%3][0];
-    return '<div class="layer-card" style="border-color:'+col+'55"><h4 style="color:'+col+'">第 '+(idx+1)+' 層 · '+kind+'</h4><div class="arrow-lab">↑ 由尖量到本層遠面　h='+L.hi+' 、H='+H+(L.lo?('　本層 '+L.lo+' → '+L.hi):'')+'</div><div class="ratio3"><div><b>'+similarHi+'</b><span>邊長比（遠面 : 原底）</span></div><div><b>'+areaHi+'</b><span>面積比（遠面 : 原底）</span></div><div><b>'+volLayer+'</b><span>本層體積 : 原錐</span></div></div></div>';
+  document.getElementById("cards").innerHTML=bounds().map(function(L,idx){
+    const col=COL[idx%3][0];
+    const kind=L.lo===0?"近尖 · 相似細錐":"台體（本層）";
+    return '<div class="layer-card" style="border-left-color:'+col+'"><h4 style="color:'+col+'">第 '+(idx+1)+' 層 · '+kind+'</h4><div class="arrow-lab" style="color:'+col+'">箭嘴指向尖　本層 '+L.lo+' → '+L.hi+'　H = '+S.H+'</div><div class="ratio3"><div><span>邊長（遠面 / 原底）</span><b>'+formLin(L.hi)+'</b></div><div><span>面積（遠面 / 原底）</span><b>'+formArea(L.hi)+'</b></div><div><span>體積（本層 / 原錐）</span><b>'+formVol(L.lo,L.hi)+'</b></div></div></div>';
   }).join("");
 }
-const cv=document.getElementById("cv"); const ctx=cv.getContext("2d");
-function resize(){const r=cv.getBoundingClientRect();const d=Math.min(2,window.devicePixelRatio||1);cv.width=r.width*d;cv.height=420*d;ctx.setTransform(d,0,0,d,0,0);}
-window.addEventListener("resize",resize);
-function project(x,y,z){const c=Math.cos(state.rot),s=Math.sin(state.rot);const xr=x*c-z*s,zr=x*s+z*c;const W=cv.getBoundingClientRect().width;const scale=Math.min(W,420)*0.42;return [W/2+xr*scale,210+8-y*scale+zr*0.22*scale,zr];}
-function yFromApex(t){return state.apex==="up"?0.92-1.84*t:-0.92+1.84*t;}
-function radiusAt(t){return 0.62*t;}
-function hexAlpha(hex,a){const n=parseInt(hex.slice(1),16);return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";}
-function drawEllipse(t,explode,color,far){const y=yFromApex(t)+explode,r=radiusAt(t);ctx.beginPath();for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;const p=project(Math.cos(a)*r,y,Math.sin(a)*r);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);}ctx.closePath();ctx.fillStyle=hexAlpha(color,far?0.18:0.35);ctx.fill();ctx.strokeStyle=hexAlpha("#e8eefc",0.55);ctx.stroke();}
-function drawSquare(t,explode,color){const y=yFromApex(t)+explode,r=radiusAt(t);const pts=[[-r,-r],[r,-r],[r,r],[-r,r]].map(p=>project(p[0],y,p[1]));ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle=hexAlpha(color,0.22);ctx.fill();ctx.strokeStyle="#e8eefc";ctx.stroke();}
-function drawPyrSlice(t0,t1,explode,col){const y0=yFromApex(t0)+explode,y1=yFromApex(t1)+explode,r0=radiusAt(t0),r1=radiusAt(t1);const sq=[[-1,-1],[1,-1],[1,1],[-1,1]];for(let i=0;i<4;i++){const a=sq[i],b=sq[(i+1)%4];const p00=project(a[0]*r0,y0,a[1]*r0),p01=project(b[0]*r0,y0,b[1]*r0),p11=project(b[0]*r1,y1,b[1]*r1),p10=project(a[0]*r1,y1,a[1]*r1);const midAng=Math.atan2(a[1]+b[1],a[0]+b[0]);const shade=0.4+0.6*(0.5+0.5*Math.cos(midAng-state.rot));ctx.beginPath();ctx.moveTo(p00[0],p00[1]);ctx.lineTo(p01[0],p01[1]);ctx.lineTo(p11[0],p11[1]);ctx.lineTo(p10[0],p10[1]);ctx.closePath();ctx.fillStyle=hexAlpha(col[0],0.3+0.4*shade);ctx.fill();ctx.strokeStyle=hexAlpha("#e8eefc",0.45);ctx.stroke();}drawSquare(t1,explode,col[0]);if(t0>0)drawSquare(t0,explode,col[1]);}
-function arrowHead(x1,y1,x2,y2,col){const a=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-8*Math.cos(a-0.4),y2-8*Math.sin(a-0.4));ctx.lineTo(x2-8*Math.cos(a+0.4),y2-8*Math.sin(a+0.4));ctx.closePath();ctx.fillStyle=col;ctx.fill();}
-function drawAxisArrows(){const xOff=-0.82;layerBounds().forEach((L,idx)=>{const pA=project(xOff,yFromApex(0),0),pB=project(xOff,yFromApex(L.hi/H),0);ctx.beginPath();ctx.moveTo(pA[0],pA[1]);ctx.lineTo(pB[0],pB[1]);ctx.strokeStyle=COLORS[idx%3][0];ctx.lineWidth=2;ctx.stroke();arrowHead(pA[0],pA[1],pB[0],pB[1],COLORS[idx%3][0]);ctx.fillStyle=COLORS[idx%3][0];ctx.font="11px Noto Sans TC";ctx.fillText("h="+L.hi,pB[0]+6,pB[1]);});const p0=project(xOff,yFromApex(0),0),pH=project(xOff,yFromApex(1),0);ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(p0[0],p0[1]);ctx.lineTo(pH[0],pH[1]);ctx.strokeStyle="rgba(148,163,184,.45)";ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#93a0bb";ctx.fillText("H="+H,pH[0]+6,pH[1]);}
-function drawSolid(){const W=cv.getBoundingClientRect().width;ctx.clearRect(0,0,W,420);ctx.fillStyle="#080e1a";ctx.fillRect(0,0,W,420);const layers=layerBounds();const gap=state.layers===1?0:0.018;const drawn=layers.map((L,idx)=>{const midT=(L.lo+L.hi)/2/H;return {L,idx,z:project(0,yFromApex(midT),0)[2]};}).sort((a,b)=>a.z-b.z);drawn.forEach(({L,idx})=>{const t0=L.lo/H,t1=L.hi/H;const explode=(state.apex==="up"?-1:1)*idx*gap*2.2;const col=COLORS[idx%3];if(state.shape==="cone"){const n=36;for(let i=0;i<n;i++){const a0=i/n*Math.PI*2,a1=(i+1)/n*Math.PI*2;const r0=radiusAt(t0),r1=radiusAt(t1);const y0=yFromApex(t0)+explode,y1=yFromApex(t1)+explode;const p00=project(Math.cos(a0)*r0,y0,Math.sin(a0)*r0);const p01=project(Math.cos(a1)*r0,y0,Math.sin(a1)*r0);const p11=project(Math.cos(a1)*r1,y1,Math.sin(a1)*r1);const p10=project(Math.cos(a0)*r1,y1,Math.sin(a0)*r1);const shade=0.45+0.55*(0.5+0.5*Math.cos(a0-state.rot));ctx.beginPath();ctx.moveTo(p00[0],p00[1]);ctx.lineTo(p01[0],p01[1]);ctx.lineTo(p11[0],p11[1]);ctx.lineTo(p10[0],p10[1]);ctx.closePath();ctx.fillStyle=hexAlpha(col[0],0.28+0.42*shade);ctx.fill();ctx.strokeStyle=hexAlpha(col[1],0.35);ctx.stroke();}drawEllipse(t1,explode,col[0],true);if(t0>0)drawEllipse(t0,explode,col[1],false);}else drawPyrSlice(t0,t1,explode,col);});drawAxisArrows();ctx.fillStyle="#93a0bb";ctx.font="12px Noto Sans TC";ctx.fillText(state.apex==="up"?"尖在上 · 底平行地面":"尖在下 · 底平行地面",16,24);ctx.fillText(state.shape==="cone"?"圓錐":"正四角錐",16,42);}
-function bindFilters(){
- document.querySelectorAll("#f-shape .chip").forEach(b=>b.onclick=()=>{state.shape=b.dataset.shape;document.querySelectorAll("#f-shape .chip").forEach(x=>x.classList.toggle("active",x===b));});
- document.querySelectorAll("#f-apex .chip").forEach(b=>b.onclick=()=>{state.apex=b.dataset.apex;document.querySelectorAll("#f-apex .chip").forEach(x=>x.classList.toggle("active",x===b));});
- document.querySelectorAll("#f-layers .chip").forEach(b=>b.onclick=()=>{state.layers=+b.dataset.layers;document.querySelectorAll("#f-layers .chip").forEach(x=>x.classList.toggle("active",x===b));setDefaultCuts();renderCuts();renderCards();});
- document.getElementById("spin-l").onclick=()=>state.rot-=0.25;
- document.getElementById("spin-r").onclick=()=>state.rot+=0.25;
- document.getElementById("auto").onclick=e=>{state.auto=!state.auto;e.target.classList.toggle("active",state.auto);};
- document.getElementById("reset").onclick=()=>{setDefaultCuts();renderCuts();renderCards();};
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+function resize(){const r=cv.getBoundingClientRect();const d=Math.min(2,devicePixelRatio||1);cv.width=r.width*d;cv.height=440*d;ctx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",resize);
+function project(x,y,z){const c=Math.cos(S.rot),s=Math.sin(S.rot);const xr=x*c-z*s,zr=x*s+z*c;const W=cv.getBoundingClientRect().width,sc=Math.min(W,440)*0.40;return [W/2+xr*sc,228-y*sc+zr*0.22*sc,zr];}
+function yA(t){return S.apex==="up"?0.92-1.84*t:-0.92+1.84*t;}
+function rad(t){return 0.62*t;}
+function rgba(hex,a){const n=parseInt(hex.slice(1),16);return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";}
+function cap(t,ex,color,far,sq){
+  const y=yA(t)+ex,r=rad(t);ctx.beginPath();
+  if(sq){[[-r,-r],[r,-r],[r,r],[-r,r]].map(function(p){return project(p[0],y,p[1]);}).forEach(function(p,i){i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);});}
+  else{for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;const p=project(Math.cos(a)*r,y,Math.sin(a)*r);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);}}
+  ctx.closePath();ctx.fillStyle=rgba(color,far?0.16:0.34);ctx.fill();ctx.strokeStyle=rgba("#e8eefc",0.55);ctx.stroke();
 }
-function loop(){if(state.auto)state.rot+=0.006;drawSolid();requestAnimationFrame(loop);}
-resize();setDefaultCuts();renderCuts();renderCards();bindFilters();loop();
+function slice(t0,t1,ex,col,pyr){
+  const y0=yA(t0)+ex,y1=yA(t1)+ex,r0=rad(t0),r1=rad(t1);
+  if(!pyr){
+    for(let i=0;i<36;i++){
+      const a0=i/36*Math.PI*2,a1=(i+1)/36*Math.PI*2;
+      const A=project(Math.cos(a0)*r0,y0,Math.sin(a0)*r0),B=project(Math.cos(a1)*r0,y0,Math.sin(a1)*r0);
+      const C=project(Math.cos(a1)*r1,y1,Math.sin(a1)*r1),D=project(Math.cos(a0)*r1,y1,Math.sin(a0)*r1);
+      const sh=0.45+0.55*(0.5+0.5*Math.cos(a0-S.rot));
+      ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.lineTo(C[0],C[1]);ctx.lineTo(D[0],D[1]);ctx.closePath();
+      ctx.fillStyle=rgba(col[0],0.26+0.42*sh);ctx.fill();ctx.strokeStyle=rgba(col[1],0.32);ctx.stroke();
+    }
+    cap(t1,ex,col[0],true,false);if(t0>0)cap(t0,ex,col[1],false,false);
+  } else {
+    const sq=[[-1,-1],[1,-1],[1,1],[-1,1]];
+    for(let i=0;i<4;i++){
+      const a=sq[i],b=sq[(i+1)%4];
+      const A=project(a[0]*r0,y0,a[1]*r0),B=project(b[0]*r0,y0,b[1]*r0),C=project(b[0]*r1,y1,b[1]*r1),D=project(a[0]*r1,y1,a[1]*r1);
+      const mid=Math.atan2(a[1]+b[1],a[0]+b[0]);const sh=0.4+0.6*(0.5+0.5*Math.cos(mid-S.rot));
+      ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.lineTo(C[0],C[1]);ctx.lineTo(D[0],D[1]);ctx.closePath();
+      ctx.fillStyle=rgba(col[0],0.3+0.4*sh);ctx.fill();ctx.strokeStyle=rgba("#e8eefc",0.4);ctx.stroke();
+    }
+    cap(t1,ex,col[0],true,true);if(t0>0)cap(t0,ex,col[1],false,true);
+  }
+}
+function head(x1,y1,x2,y2,col){const a=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(a-0.4),y2-9*Math.sin(a-0.4));ctx.lineTo(x2-9*Math.cos(a+0.4),y2-9*Math.sin(a+0.4));ctx.closePath();ctx.fillStyle=col;ctx.fill();}
+function arrows(){
+  bounds().forEach(function(ly,idx){
+    const off=-0.72-idx*0.09;
+    const pFar=project(off,yA(ly.hi/S.H),0),pApex=project(off,yA(0),0);
+    ctx.beginPath();ctx.moveTo(pFar[0],pFar[1]);ctx.lineTo(pApex[0],pApex[1]);
+    ctx.strokeStyle=COL[idx%3][0];ctx.lineWidth=2;ctx.stroke();
+    head(pFar[0],pFar[1],pApex[0],pApex[1],COL[idx%3][0]);
+    ctx.fillStyle=COL[idx%3][0];ctx.font="11px Noto Sans TC";ctx.fillText("h="+ly.hi,pFar[0]+6,pFar[1]);
+  });
+  const p0=project(-0.96,yA(0),0),pH=project(-0.96,yA(1),0);
+  ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(p0[0],p0[1]);ctx.lineTo(pH[0],pH[1]);ctx.strokeStyle="rgba(148,163,184,.45)";ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle="#93a0bb";ctx.fillText("H="+S.H,pH[0]+6,pH[1]);
+}
+function draw(){
+  const W=cv.getBoundingClientRect().width;ctx.clearRect(0,0,W,440);ctx.fillStyle="#080e1a";ctx.fillRect(0,0,W,440);
+  const L=bounds(),gap=S.layers===1?0:0.02;
+  L.map(function(ly,idx){return {ly:ly,idx:idx,z:project(0,yA((ly.lo+ly.hi)/2/S.H),0)[2]};}).sort(function(a,b){return a.z-b.z;}).forEach(function(item){
+    const ex=(S.apex==="up"?-1:1)*item.idx*gap*2;
+    slice(item.ly.lo/S.H,item.ly.hi/S.H,ex,COL[item.idx%3],S.shape==="pyr");
+  });
+  arrows();ctx.fillStyle="#93a0bb";ctx.font="12px Noto Sans TC";
+  ctx.fillText((S.apex==="up"?"尖在上":"尖在下")+" · "+(S.shape==="cone"?"圓錐":"正四角錐"),16,24);
+}
+function setH(v){v=Math.max(2,Math.min(99,v|0));const old=S.H;S.H=v;S.cuts=S.cuts.map(function(c){return Math.round(c*S.H/old);});clampCuts();renderCuts();renderCards();}
+function bind(){
+  document.querySelectorAll(".chip[data-k]").forEach(function(b){b.onclick=function(){
+    const k=b.dataset.k,v=b.dataset.v;
+    if(k==="layers"){S.layers=+v;equalCuts();} else S[k]=v;
+    b.parentElement.querySelectorAll(".chip").forEach(function(x){x.classList.toggle("active",x===b);});
+    renderCuts();renderCards();
+  };});
+  document.getElementById("spin-l").onclick=function(){S.rot-=0.25;};
+  document.getElementById("spin-r").onclick=function(){S.rot+=0.25;};
+  document.getElementById("auto").onclick=function(e){S.auto=!S.auto;e.target.classList.toggle("active",S.auto);};
+  document.getElementById("reset").onclick=function(){equalCuts();renderCuts();renderCards();};
+  document.getElementById("hRange").oninput=function(e){setH(+e.target.value);};
+  document.getElementById("hNum").onchange=function(e){setH(+e.target.value);};
+}
+function loop(){if(S.auto)S.rot+=0.006;draw();requestAnimationFrame(loop);}
+function eq(){if(window.katex)katex.render("\\dfrac{\\ell}{L}=\\dfrac{h}{H}=k\\qquad \\dfrac{A}{A_0}=k^{2}\\qquad \\dfrac{V}{V_0}=k^{3}",document.getElementById("eq"),{displayMode:true,throwOnError:false});}
+resize();equalCuts();renderCuts();renderCards();bind();eq();loop();
 </script>
 </body>
 </html>
