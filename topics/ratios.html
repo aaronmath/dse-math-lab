@@ -27,13 +27,15 @@
 .lcard .hd{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:13px;font-weight:700}
 .dot{width:10px;height:10px;border-radius:50%}
 .trio{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--line)}
-.cell{padding:8px 6px 10px;text-align:center}
+.cell{padding:8px 4px 10px;text-align:center}
 .cell + .cell{border-left:1px solid var(--line)}
 .cell span{display:block;font-size:11px;color:var(--muted)}
-.cell .tex{min-height:42px;display:flex;align-items:center;justify-content:center}
+.cell .tex{min-height:56px;display:block;text-align:center;padding:4px 0;overflow:visible}
+.cell .tex .katex{font-size:1.15em}
+.katex-display{margin:0.2em 0}
 .why{margin-top:28px;padding:16px 18px}.why h2{font-size:16px;margin:0 0 8px}
 .why-board{display:flex;align-items:end;justify-content:center;gap:24px;min-height:140px;padding:8px}
-#eq{min-height:48px}
+#eq{min-height:56px}
 </style>
 </head>
 <body>
@@ -93,7 +95,7 @@
 const S={shape:"cone",apex:"up",layers:3,mode:"form",cmp:"small",H:8,cuts:[3,5],rot:.5,auto:true,k:2};
 const COL=[["#2dd4bf","#0f766e"],["#fbbf24","#b45309"],["#a78bfa","#6d28d9"]];
 function gcd(a,b){a=Math.abs(a|0);b=Math.abs(b|0);while(b){const t=a%b;a=b;b=t;}return a||1;}
-function tex(el,s){if(window.katex)katex.render(s,el,{displayMode:true,throwOnError:false});}
+function tex(el,s,big){if(el&&window.katex)katex.render(s,el,{displayMode:!!big,throwOnError:false});}
 function simpF(n,d){const g=gcd(n,d);return "\\dfrac{"+ (n/g) +"}{"+ (d/g) +"}";}
 function powF(a,b,p){return S.mode==="simp"?simpF(Math.pow(a,p),Math.pow(b,p)):("\\dfrac{"+a+"^{"+p+"}}{"+b+"^{"+p+"}}");}
 function diffF(hi,lo,H,p){return S.mode==="simp"?simpF(Math.pow(hi,p)-Math.pow(lo,p),Math.pow(H,p)):("\\dfrac{"+hi+"^{"+p+"}-"+lo+"^{"+p+"}}{"+H+"^{"+p+"}}");}
@@ -131,7 +133,7 @@ function setH(v){v=Math.max(3,Math.min(24,v|0));const old=S.H;S.H=v;S.cuts=S.cut
 function setK(k){S.k=k;document.getElementById("kLab").textContent=k;const s=36*k,sq2=document.getElementById("sq2");sq2.style.width=s+"px";sq2.style.height=s+"px";sq2.textContent=String(k*k);document.getElementById("cube").style.width=(28*k)+"px";document.getElementById("cube").style.height=(28*k)+"px";}
 function bind(){document.querySelectorAll(".seg").forEach(function(seg){seg.querySelectorAll("button").forEach(function(b){b.onclick=function(){const k=seg.dataset.k,v=b.dataset.v;if(k==="layers"){S.layers=+v;equalCuts();if(S.layers===1)S.cmp="small";}else S[k]=v;seg.querySelectorAll("button").forEach(function(x){x.classList.toggle("active",x===b);});if(k==="layers"){document.querySelectorAll('[data-k="cmp"] button').forEach(function(x){x.classList.toggle("active",x.dataset.v===S.cmp);});}renderSlats();renderCards();};});});document.getElementById("spin-l").onclick=function(){S.rot-=0.25;};document.getElementById("spin-r").onclick=function(){S.rot+=0.25;};document.getElementById("auto").onclick=function(e){S.auto=!S.auto;e.target.classList.toggle("active",S.auto);};document.getElementById("reset").onclick=function(){equalCuts();renderSlats();renderCards();};document.getElementById("kRange").oninput=function(e){setK(+e.target.value);};}
 function loop(){if(S.auto)S.rot+=0.005;draw();requestAnimationFrame(loop);}
-function eq(){tex(document.getElementById("eq"),"\\dfrac{A_1}{A_2}=\\left(\\dfrac{\\ell_1}{\\ell_2}\\right)^{2}\\qquad \\dfrac{V_1}{V_2}=\\left(\\dfrac{\\ell_1}{\\ell_2}\\right)^{3}");}
+function eq(){tex(document.getElementById("eq"),"\\dfrac{A_1}{A_2}=\\left(\\dfrac{\\ell_1}{\\ell_2}\\right)^{2}\\qquad \\dfrac{V_1}{V_2}=\\left(\\dfrac{\\ell_1}{\\ell_2}\\right)^{3}",true);}
 resize();renderSlats();renderCards();bind();setK(2);eq();loop();
 </script>
 </body>
