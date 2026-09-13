@@ -15,7 +15,7 @@
 .eqbox{background:#0a1220;border:1px solid var(--line);border-radius:16px;padding:16px}
 .eqbox .lab{font-size:12px;color:var(--muted);margin-bottom:10px}
 .math{font-size:26px;font-weight:800;min-height:72px;display:flex;align-items:center;justify-content:center;font-style:italic}
-.eqbox.ans{border-color:rgba(94,234,212,.45)}.eqbox.ans .math{color:var(--teal);font-style:normal}
+.eqbox.ans{border-color:rgba(94,234,212,.45)}.eqbox.ans .math{color:var(--teal)}
 .mf{display:inline-block;text-align:center;line-height:1.25;font-style:italic}
 .mf .n,.mf .d{display:block;white-space:nowrap;min-height:1.25em}
 .mf .n{border-bottom:1.7px solid currentColor;padding:0 10px 5px}.mf .d{padding:5px 10px 0}
@@ -23,7 +23,7 @@
 .tok.neg{color:#fbbf24}
 .tok.fly-dn{transform:translateY(34px);opacity:.2}.tok.fly-up{transform:translateY(-34px);opacity:.2}
 .tok.pop{animation:pop 1s ease}
-@keyframes pop{0%{transform:scale(1.4);color:#fbbf24}100%{transform:none}}
+@keyframes pop{0%{transform:scale(1.35);color:#fbbf24}100%{transform:none}}
 .ghost{opacity:0;transform:translateY(12px);transition:.4s}.ghost.on{opacity:1;transform:none}
 </style>
 </head>
@@ -61,45 +61,47 @@ function sup(n){return String(n).split('').map(function(c){return U[c]||c;}).joi
 function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
 function pick(a){return a[rnd(0,a.length-1)];}
 function nz(a,b){var n=rnd(a,b);return n===0?(a||b||1):n;}
-function term(b,e){if(!e)return '';if(e===1)return b;return b+sup(e);}
-function toksHTML(list,layer){var a=list.filter(function(t){return t.L===layer;});if(!a.length)return '<span class="tok">1</span>';return a.map(function(t){return '<span class="tok'+(t.e<0?' neg':'')+'" data-l="'+t.L+'">'+term(t.b,t.e)+'</span>';}).join('');}
-function frac(list){var hasD=list.some(function(t){return t.L==='d';});if(!hasD)return toksHTML(list,'n');return '<span class="mf"><span class="n">'+toksHTML(list,'n')+'</span><span class="d">'+toksHTML(list,'d')+'</span></span>';}
+function term(b,e){if(!e||!b)return '';if(e===1)return b;return b+sup(e);}
+function layer(list,L){return list.filter(function(t){return t.L===L&&t.e&&t.b;});}
+function toksHTML(list,L){var a=layer(list,L);if(!a.length)return '<span class="tok">1</span>';return a.map(function(t){return '<span class="tok'+(t.e<0?' neg':'')+'" data-l="'+t.L+'">'+term(t.b,t.e)+'</span>';}).join('');}
+function frac(list){if(!layer(list,'d').length)return toksHTML(list,'n');return '<span class="mf"><span class="n">'+toksHTML(list,'n')+'</span><span class="d">'+toksHTML(list,'d')+'</span></span>';}
 function paren(parts,p){return '('+parts.map(function(t){return term(t.b,t.e);}).join('')+')'+sup(p);}
-function mulIn(parts,p){return parts.map(function(t){return {b:t.b,e:t.e*p,L:t.L};});}
+function mulIn(parts,p,L){return parts.map(function(t){return {b:t.b,e:t.e*p,L:L};});}
 function moveOnly(list){return list.map(function(t){if(t.e>=0)return {b:t.b,e:t.e,L:t.L};return {b:t.b,e:-t.e,L:t.L==='n'?'d':'n'};});}
-function simplify(list){var bag={};list.forEach(function(t){if(!t.b)return;if(!bag[t.b])bag[t.b]={n:0,d:0};bag[t.b][t.L]+=t.e;});var out=[];Object.keys(bag).sort().forEach(function(b){var n=bag[b].n,d=bag[b].d;if(n&&d){if(n>d)out.push({b:b,e:n-d,L:'n'});else if(d>n)out.push({b:b,e:d-n,L:'d'});}else if(n)out.push({b:b,e:n,L:'n'});else if(d)out.push({b:b,e:d,L:'d'});});if(!out.length)out=[{b:'',e:1,L:'n'}];return out;}
-function needMove(list){return list.some(function(t){return t.e<0;});}
+function addSameLayer(list){var bag={};list.forEach(function(t){var k=t.L+'|'+t.b;bag[k]=bag[k]||{b:t.b,L:t.L,e:0};bag[k].e+=t.e;});return Object.keys(bag).map(function(k){return bag[k];}).filter(function(t){return t.e!==0;});}
+function crossSimp(list){var bag={};list.forEach(function(t){if(!t.b)return;if(!bag[t.b])bag[t.b]={n:0,d:0};bag[t.b][t.L]+=t.e;});var out=[];Object.keys(bag).sort().forEach(function(b){var n=bag[b].n||0,d=bag[b].d||0;if(n&&d){if(n>d)out.push({b:b,e:n-d,L:'n'});else if(d>n)out.push({b:b,e:d-n,L:'d'});}else if(n)out.push({b:b,e:n,L:'n'});else if(d)out.push({b:b,e:d,L:'d'});});return out.length?out:[{b:'',e:1,L:'n'}];}
+function hasNeg(list){return list.some(function(t){return t.e<0;});}
 var FILT='all',G={i:0,steps:[]};
 function gen(){
  var pair=pick([['x','y'],['m','n'],['a','b']]),x=pair[0],y=pair[1];
  var t=FILT==='all'?pick(['den','num','prod','negout']):FILT;
- var raw,afterMul;
- if(t==='den'){var p=rnd(2,5),A=[{b:x,e:rnd(1,3)},{b:y,e:1}];var N=[{b:x,e:rnd(4,12),L:'n'},{b:y,e:rnd(3,10),L:'n'}];afterMul=N.concat(mulIn(A,p).map(function(u){return {b:u.b,e:u.e,L:'d'};}));raw='<span class="mf"><span class="n">'+N.map(function(u){return term(u.b,u.e);}).join('')+'</span><span class="d">'+paren(A,p)+'</span></span>';}
- else if(t==='num'){var p=rnd(2,4),A=[{b:x,e:nz(-3,4)},{b:y,e:rnd(-4,-1)}];afterMul=mulIn(A,p).map(function(u){return {b:u.b,e:u.e,L:'n'};}).concat([{b:y,e:rnd(2,5),L:'d'}]);raw='<span class="mf"><span class="n">'+paren(A,p)+'</span><span class="d">'+term(y,afterMul.filter(function(u){return u.L==='d';})[0].e)+'</span></span>';}
- else if(t==='prod'){var p=rnd(2,5),A=[{b:x,e:1},{b:y,e:rnd(1,4)}],B=[{b:x,e:rnd(-4,-1)},{b:y,e:rnd(1,4)}];afterMul=A.map(function(u){return {b:u.b,e:u.e,L:'n'};}).concat(mulIn(B,p).map(function(u){return {b:u.b,e:u.e,L:'n'};}));raw='('+A.map(function(u){return term(u.b,u.e);}).join('')+')('+B.map(function(u){return term(u.b,u.e);}).join('')+')'+sup(p);}
- else{var p=-rnd(2,5),A=[{b:x,e:rnd(1,3)},{b:y,e:rnd(2,6)}];var N=[{b:x,e:rnd(-8,-2),L:'n'},{b:y,e:1,L:'n'}];afterMul=N.concat(mulIn(A,p).map(function(u){return {b:u.b,e:u.e,L:'d'};}));raw='<span class="mf"><span class="n">'+N.map(function(u){return term(u.b,u.e);}).join('')+'</span><span class="d">'+paren(A,p)+'</span></span>';}
- var moved=moveOnly(afterMul),done=simplify(moved),mv=needMove(afterMul);
- var steps=[{lab:'題目',html:raw,kind:'q'}];
- steps.push({lab:'1 · 次方乘入',html:frac(afterMul),kind:'in'});
- if(mv){steps.push({lab:'2 · 負指數搬層（唔化簡）',html:frac(afterMul),after:frac(moved),kind:'move'});steps.push({lab:'3 · 正指數',html:frac(moved),kind:'pos'});steps.push({lab:'4 · 化簡',html:frac(moved),after:frac(done),kind:'simp'});}
- else steps.push({lab:'2 · 化簡',html:frac(afterMul),after:frac(done),kind:'simp'});
- steps.push({lab:'答案',html:frac(done),kind:'ans'});
+ var raw,mul,steps=[];
+ if(t==='prod'){
+  var p=rnd(2,5),A=[{b:x,e:1},{b:y,e:rnd(1,4)}],B=[{b:x,e:rnd(-4,-1)},{b:y,e:nz(-4,4)}];
+  mul=mulIn(A,1,'n').concat(mulIn(B,p,'n'));
+  raw='('+A.map(function(u){return term(u.b,u.e);}).join('')+')('+B.map(function(u){return term(u.b,u.e);}).join('')+')'+sup(p);
+  var added=addSameLayer(mul),moved=moveOnly(added);
+  steps=[{lab:'題目',html:raw,kind:'q'},{lab:'1 · 次方乘入',html:frac(mul),kind:'in'},{lab:'2 · 同層相加',html:frac(mul),after:frac(added.length?added:[{b:'',e:1,L:'n'}]),kind:'simp'}];
+  if(hasNeg(added)) steps.push({lab:'3 · 搬層',html:frac(added),after:frac(moved),kind:'move',ans:true});
+  else steps.push({lab:'3 · 答案',html:frac(added),kind:'ans'});
+ }else{
+  if(t==='den'){var p=rnd(2,5),A=[{b:x,e:rnd(1,3)},{b:y,e:1}];var N=[{b:x,e:rnd(4,12),L:'n'},{b:y,e:rnd(3,10),L:'n'}];mul=N.concat(mulIn(A,p,'d'));raw='<span class="mf"><span class="n">'+N.map(function(u){return term(u.b,u.e);}).join('')+'</span><span class="d">'+paren(A,p)+'</span></span>';}
+  else if(t==='num'){var p=rnd(2,4),A=[{b:x,e:nz(-3,4)},{b:y,e:rnd(-4,-1)}];mul=mulIn(A,p,'n').concat([{b:y,e:rnd(2,5),L:'d'}]);raw='<span class="mf"><span class="n">'+paren(A,p)+'</span><span class="d">'+term(y,layer(mul,'d')[0].e)+'</span></span>';}
+  else{var p=-rnd(2,5),A=[{b:x,e:rnd(1,3)},{b:y,e:rnd(2,6)}];var N=[{b:x,e:rnd(-8,-2),L:'n'},{b:y,e:1,L:'n'}];mul=N.concat(mulIn(A,p,'d'));raw='<span class="mf"><span class="n">'+N.map(function(u){return term(u.b,u.e);}).join('')+'</span><span class="d">'+paren(A,p)+'</span></span>';}
+  var moved=moveOnly(mul),done=crossSimp(moved);
+  steps=[{lab:'題目',html:raw,kind:'q'},{lab:'1 · 次方乘入',html:frac(mul),kind:'in'}];
+  if(hasNeg(mul)){steps.push({lab:'2 · 搬層',html:frac(mul),after:frac(moved),kind:'move'});steps.push({lab:'3 · 化簡',html:frac(moved),after:frac(done),kind:'simp',ans:true});}
+  else{steps.push({lab:'2 · 化簡',html:frac(mul),after:frac(done),kind:'simp'});steps.push({lab:'3 · 答案',html:frac(done),kind:'ans'});}
+ }
  G={i:0,steps:steps};
 }
-function addCard(s){
- var el=document.createElement('div');el.className='eqbox ghost'+(s.kind==='ans'?' ans':'');
- el.innerHTML='<div class="lab">'+s.lab+'</div><div class="math">'+s.html+'</div>';
- document.getElementById('col').appendChild(el);
- requestAnimationFrame(function(){el.classList.add('on');});
- if(s.kind==='move'){setTimeout(function(){el.querySelectorAll('.tok.neg').forEach(function(tok){tok.classList.add(tok.dataset.l==='n'?'fly-dn':'fly-up');});},200);setTimeout(function(){el.querySelector('.math').innerHTML=s.after;},1400);}
- else if(s.kind==='simp'&&s.after){setTimeout(function(){el.querySelector('.math').innerHTML=s.after;el.querySelectorAll('.tok').forEach(function(tok){tok.classList.add('pop');});},900);}
-}
+function addCard(s){var el=document.createElement('div');el.className='eqbox ghost'+(s.ans||s.kind==='ans'?' ans':'');el.innerHTML='<div class="lab">'+s.lab+'</div><div class="math">'+s.html+'</div>';document.getElementById('col').appendChild(el);requestAnimationFrame(function(){el.classList.add('on');});if(s.kind==='move'&&s.after){setTimeout(function(){el.querySelectorAll('.tok.neg').forEach(function(tok){tok.classList.add(tok.dataset.l==='n'?'fly-dn':'fly-up');});},200);setTimeout(function(){el.querySelector('.math').innerHTML=s.after;},1400);}else if(s.kind==='simp'&&s.after){setTimeout(function(){el.querySelector('.math').innerHTML=s.after;el.querySelectorAll('.tok').forEach(function(tok){tok.classList.add('pop');});},900);}}
 function boot(){gen();document.getElementById('col').innerHTML='';addCard(G.steps[0]);G.i=1;}
 function next(){if(G.i<G.steps.length){addCard(G.steps[G.i]);G.i++;}}
 document.getElementById('filt').onclick=function(e){var b=e.target.closest('button');if(!b)return;FILT=b.dataset.t;[].forEach.call(document.querySelectorAll('#filt button'),function(x){x.classList.toggle('active',x===b);});boot();};
 document.getElementById('new').onclick=boot;
 document.getElementById('next').onclick=next;
-document.getElementById('all').onclick=function(){var col=document.getElementById('col');col.innerHTML='';G.steps.forEach(function(s){var el=document.createElement('div');el.className='eqbox on'+(s.kind==='ans'?' ans':'');el.innerHTML='<div class="lab">'+s.lab+'</div><div class="math">'+(s.after||s.html)+'</div>';col.appendChild(el);});G.i=G.steps.length;};
+document.getElementById('all').onclick=function(){var col=document.getElementById('col');col.innerHTML='';G.steps.forEach(function(s){var el=document.createElement('div');el.className='eqbox on'+(s.ans||s.kind==='ans'?' ans':'');el.innerHTML='<div class="lab">'+s.lab+'</div><div class="math">'+(s.after||s.html)+'</div>';col.appendChild(el);});G.i=G.steps.length;};
 boot();
 </script>
 </body>
