@@ -7,27 +7,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="../css/style.css"/>
 <style>
-.hero{padding:32px 0 8px}.hero h1{font-size:30px;margin:8px 0}
-.seg{display:flex;flex-wrap:wrap;background:#0a1220;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0 8px 12px 0}
+.hero{padding:28px 0 6px}.hero h1{font-size:30px;margin:8px 0}
+.seg{display:flex;flex-wrap:wrap;background:#0a1220;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px}
 .seg button{background:transparent;border:0;color:var(--muted);padding:8px 12px;font:600 12px/1 "Noto Sans TC";cursor:pointer}
 .seg button.active{background:rgba(94,234,212,.12);color:var(--teal)}
-.stage-q{background:#0a1220;border:1px solid var(--line);border-radius:18px;padding:22px 14px;min-height:96px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800}
-.cards{margin-top:12px;display:grid;gap:10px}
-.sc{background:#0a1220;border:1px solid var(--line);border-radius:16px;padding:14px 16px;opacity:0;transform:translateY(10px);transition:.35s}
-.sc.on{opacity:1;transform:none}
-.sc .lab{font-size:12px;color:var(--muted);margin-bottom:8px}
-.math{font-size:24px;font-weight:800;min-height:64px;display:flex;align-items:center;justify-content:center}
-.sc.ans{border-color:rgba(94,234,212,.4)}.sc.ans .math{color:var(--teal)}
-.mf{display:inline-block;text-align:center;line-height:1.2;vertical-align:middle}
-.mf .n,.mf .d{display:block;white-space:nowrap;min-height:1.2em}
-.mf .n{border-bottom:1.6px solid currentColor;padding:0 8px 4px}.mf .d{padding:4px 8px 0}
-.tok{display:inline-block;margin:0 2px;position:relative}
+.col{display:grid;gap:12px}
+.eqbox{background:#0a1220;border:1px solid var(--line);border-radius:16px;padding:16px}
+.eqbox .lab{font-size:12px;color:var(--muted);margin-bottom:10px}
+.math{font-size:26px;font-weight:800;min-height:72px;display:flex;align-items:center;justify-content:center;font-style:italic}
+.eqbox.ans{border-color:rgba(94,234,212,.45)}.eqbox.ans .math{color:var(--teal);font-style:normal}
+.mf{display:inline-block;text-align:center;line-height:1.25;font-style:italic}
+.mf .n,.mf .d{display:block;white-space:nowrap;min-height:1.25em}
+.mf .n{border-bottom:1.7px solid currentColor;padding:0 10px 5px}.mf .d{padding:5px 10px 0}
+.tok{display:inline-block;margin:0 3px;transition:transform 1.2s ease,opacity 1.2s ease}
 .tok.neg{color:#fbbf24}
-.tok.fly-dn{animation:dn .7s ease forwards}.tok.fly-up{animation:up .7s ease forwards}
-@keyframes dn{to{transform:translateY(28px);opacity:.15}}
-@keyframes up{to{transform:translateY(-28px);opacity:.15}}
-.tok.merge{animation:pop .45s ease}
-@keyframes pop{from{transform:scale(1.35);color:#fbbf24}to{transform:none}}
+.tok.fly-dn{transform:translateY(34px);opacity:.2}.tok.fly-up{transform:translateY(-34px);opacity:.2}
+.tok.pop{animation:pop 1s ease}
+@keyframes pop{0%{transform:scale(1.4);color:#fbbf24}100%{transform:none}}
+.ghost{opacity:0;transform:translateY(12px);transition:.4s}.ghost.on{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -42,7 +39,6 @@
 </div></div></nav>
 <div class="wrap">
 <header class="hero"><div class="kicker">Topic 02 · 整數指數定律</div><h1>化簡 · <span>正指數</span></h1></header>
-<div class="controls">
 <div class="seg" id="filt">
 <button class="active" data-t="all">全部</button>
 <button data-t="den">括號在分母</button>
@@ -50,11 +46,12 @@
 <button data-t="prod">兩組相乘</button>
 <button data-t="negout">外層負指數</button>
 </div>
+<div class="controls">
 <button class="btn btn-primary" id="new">出題</button>
 <button class="btn btn-ghost" id="next">下一步</button>
 <button class="btn btn-ghost" id="all">全部步驟</button>
 </div>
-<div class="panel"><div class="stage-q" id="q"></div><div class="cards" id="cards"></div></div>
+<div class="col" id="col"></div>
 <footer><a href="../index.html" style="color:var(--teal)">返主頁</a></footer>
 </div>
 <script src="../js/main.js"></script>
@@ -63,51 +60,46 @@ const U={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':
 function sup(n){return String(n).split('').map(function(c){return U[c]||c;}).join('');}
 function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
 function pick(a){return a[rnd(0,a.length-1)];}
-function nz(a,b){var n=rnd(a,b);return n===0?(a===0?b:a):n;}
+function nz(a,b){var n=rnd(a,b);return n===0?(a||b||1):n;}
 function term(b,e){if(!e)return '';if(e===1)return b;return b+sup(e);}
-function keys(m){return Object.keys(m||{}).filter(function(k){return m[k];}).sort();}
-function show(m){var k=keys(m);return k.length?k.map(function(x){return term(x,m[x]);}).join(''):'1';}
-function toks(m,layer){var k=keys(m);if(!k.length)return '<span class="tok">1</span>';return k.map(function(x){var e=m[x];return '<span class="tok'+(e<0?' neg':'')+'" data-l="'+layer+'">'+term(x,e)+'</span>';}).join('');}
-function fracTok(n,d){if(!keys(d).length)return toks(n,'n');return '<span class="mf"><span class="n">'+toks(n,'n')+'</span><span class="d">'+toks(d,'d')+'</span></span>';}
-function fracShow(n,d){if(!keys(d).length)return show(n)||'1';return '<span class="mf"><span class="n">'+(show(n)||'1')+'</span><span class="d">'+(show(d)||'1')+'</span></span>';}
-function paren(m,p){return '('+show(m)+')'+sup(p);}
-function powM(m,p){var o={};keys(m).forEach(function(k){o[k]=m[k]*p;});return o;}
-function addM(a,b){var o={};[a,b].forEach(function(m){keys(m).forEach(function(k){o[k]=(o[k]||0)+m[k];});});return o;}
-function copy(m){var o={};keys(m).forEach(function(k){o[k]=m[k];});return o;}
-function moveLayer(n,d){var N=copy(n),D=copy(d);keys(n).forEach(function(k){if(n[k]<0){D[k]=(D[k]||0)-n[k];delete N[k];}});keys(d).forEach(function(k){if(d[k]<0){N[k]=(N[k]||0)-d[k];delete D[k];}});return[N,D];}
-function simp(n,d){var N=copy(n),D=copy(d),all={};keys(N).concat(keys(D)).forEach(function(k){all[k]=1;});Object.keys(all).forEach(function(k){var a=N[k]||0,b=D[k]||0;if(a&&b){if(a>b){N[k]=a-b;delete D[k];}else if(b>a){D[k]=b-a;delete N[k];}else{delete N[k];delete D[k];}}});return[N,D];}
-function hasNeg(n,d){return keys(n).some(function(k){return n[k]<0;})||keys(d).some(function(k){return d[k]<0;});}
-var FILT='all',G={i:0,steps:[],q:''};
+function toksHTML(list,layer){var a=list.filter(function(t){return t.L===layer;});if(!a.length)return '<span class="tok">1</span>';return a.map(function(t){return '<span class="tok'+(t.e<0?' neg':'')+'" data-l="'+t.L+'">'+term(t.b,t.e)+'</span>';}).join('');}
+function frac(list){var hasD=list.some(function(t){return t.L==='d';});if(!hasD)return toksHTML(list,'n');return '<span class="mf"><span class="n">'+toksHTML(list,'n')+'</span><span class="d">'+toksHTML(list,'d')+'</span></span>';}
+function paren(parts,p){return '('+parts.map(function(t){return term(t.b,t.e);}).join('')+')'+sup(p);}
+function mulIn(parts,p){return parts.map(function(t){return {b:t.b,e:t.e*p,L:t.L};});}
+function moveOnly(list){return list.map(function(t){if(t.e>=0)return {b:t.b,e:t.e,L:t.L};return {b:t.b,e:-t.e,L:t.L==='n'?'d':'n'};});}
+function simplify(list){var bag={};list.forEach(function(t){if(!t.b)return;if(!bag[t.b])bag[t.b]={n:0,d:0};bag[t.b][t.L]+=t.e;});var out=[];Object.keys(bag).sort().forEach(function(b){var n=bag[b].n,d=bag[b].d;if(n&&d){if(n>d)out.push({b:b,e:n-d,L:'n'});else if(d>n)out.push({b:b,e:d-n,L:'d'});}else if(n)out.push({b:b,e:n,L:'n'});else if(d)out.push({b:b,e:d,L:'d'});});if(!out.length)out=[{b:'',e:1,L:'n'}];return out;}
+function needMove(list){return list.some(function(t){return t.e<0;});}
+var FILT='all',G={i:0,steps:[]};
 function gen(){
  var pair=pick([['x','y'],['m','n'],['a','b']]),x=pair[0],y=pair[1];
  var t=FILT==='all'?pick(['den','num','prod','negout']):FILT;
- var A={},B={},num,den,raw;
- if(t==='den'){var p=rnd(2,5);A[x]=rnd(1,3);A[y]=1;num={};num[x]=rnd(4,12);num[y]=rnd(3,10);den=powM(A,p);raw='<span class="mf"><span class="n">'+show(num)+'</span><span class="d">'+paren(A,p)+'</span></span>';}
- else if(t==='num'){var p=rnd(2,4);A[x]=nz(-3,4);A[y]=rnd(-4,-1);num=powM(A,p);den={};den[y]=rnd(2,5);raw='<span class="mf"><span class="n">'+paren(A,p)+'</span><span class="d">'+show(den)+'</span></span>';}
- else if(t==='prod'){var p=rnd(2,5);A[x]=1;A[y]=rnd(1,4);B[x]=rnd(-4,-1);B[y]=rnd(1,4);num=addM(A,powM(B,p));den={};raw='('+show(A)+')('+show(B)+')'+sup(p);}
- else{var p=-rnd(2,5);A[x]=rnd(1,3);A[y]=rnd(2,6);num={};num[x]=rnd(-8,-2);num[y]=1;den=powM(A,p);raw='<span class="mf"><span class="n">'+show(num)+'</span><span class="d">'+paren(A,p)+'</span></span>';}
- var mv=moveLayer(num,den),sm=simp(mv[0],mv[1]);
- var steps=[{lab:'1 · 次方乘入',html:fracTok(num,den),kind:'in'}];
- if(hasNeg(num,den)) steps.push({lab:'2 · 負指數搬層',html:fracTok(num,den),after:fracTok(mv[0],mv[1]),kind:'move'});
- steps.push({lab:(hasNeg(num,den)?'3':'2')+' · 同層加 · 異層減',html:fracTok(mv[0],mv[1]),after:fracTok(sm[0],sm[1]),kind:'simp'});
- steps.push({lab:'答案',html:fracShow(sm[0],sm[1]),kind:'ans',ans:true});
- G={i:0,steps:steps,q:raw};
+ var raw,afterMul;
+ if(t==='den'){var p=rnd(2,5),A=[{b:x,e:rnd(1,3)},{b:y,e:1}];var N=[{b:x,e:rnd(4,12),L:'n'},{b:y,e:rnd(3,10),L:'n'}];afterMul=N.concat(mulIn(A,p).map(function(u){return {b:u.b,e:u.e,L:'d'};}));raw='<span class="mf"><span class="n">'+N.map(function(u){return term(u.b,u.e);}).join('')+'</span><span class="d">'+paren(A,p)+'</span></span>';}
+ else if(t==='num'){var p=rnd(2,4),A=[{b:x,e:nz(-3,4)},{b:y,e:rnd(-4,-1)}];afterMul=mulIn(A,p).map(function(u){return {b:u.b,e:u.e,L:'n'};}).concat([{b:y,e:rnd(2,5),L:'d'}]);raw='<span class="mf"><span class="n">'+paren(A,p)+'</span><span class="d">'+term(y,afterMul.filter(function(u){return u.L==='d';})[0].e)+'</span></span>';}
+ else if(t==='prod'){var p=rnd(2,5),A=[{b:x,e:1},{b:y,e:rnd(1,4)}],B=[{b:x,e:rnd(-4,-1)},{b:y,e:rnd(1,4)}];afterMul=A.map(function(u){return {b:u.b,e:u.e,L:'n'};}).concat(mulIn(B,p).map(function(u){return {b:u.b,e:u.e,L:'n'};}));raw='('+A.map(function(u){return term(u.b,u.e);}).join('')+')('+B.map(function(u){return term(u.b,u.e);}).join('')+')'+sup(p);}
+ else{var p=-rnd(2,5),A=[{b:x,e:rnd(1,3)},{b:y,e:rnd(2,6)}];var N=[{b:x,e:rnd(-8,-2),L:'n'},{b:y,e:1,L:'n'}];afterMul=N.concat(mulIn(A,p).map(function(u){return {b:u.b,e:u.e,L:'d'};}));raw='<span class="mf"><span class="n">'+N.map(function(u){return term(u.b,u.e);}).join('')+'</span><span class="d">'+paren(A,p)+'</span></span>';}
+ var moved=moveOnly(afterMul),done=simplify(moved),mv=needMove(afterMul);
+ var steps=[{lab:'題目',html:raw,kind:'q'}];
+ steps.push({lab:'1 · 次方乘入',html:frac(afterMul),kind:'in'});
+ if(mv){steps.push({lab:'2 · 負指數搬層（唔化簡）',html:frac(afterMul),after:frac(moved),kind:'move'});steps.push({lab:'3 · 正指數',html:frac(moved),kind:'pos'});steps.push({lab:'4 · 化簡',html:frac(moved),after:frac(done),kind:'simp'});}
+ else steps.push({lab:'2 · 化簡',html:frac(afterMul),after:frac(done),kind:'simp'});
+ steps.push({lab:'答案',html:frac(done),kind:'ans'});
+ G={i:0,steps:steps};
 }
-function paint(anim){
- document.getElementById('q').innerHTML=G.q;
- document.getElementById('cards').innerHTML=G.steps.map(function(s,i){return '<div class="sc'+(i<G.i?' on':'')+(s.ans?' ans':'')+'"><div class="lab">'+s.lab+'</div><div class="math" id="m'+i+'">'+s.html+'</div></div>';}).join('');
- if(anim&&G.i>0) play(G.i-1);
+function addCard(s){
+ var el=document.createElement('div');el.className='eqbox ghost'+(s.kind==='ans'?' ans':'');
+ el.innerHTML='<div class="lab">'+s.lab+'</div><div class="math">'+s.html+'</div>';
+ document.getElementById('col').appendChild(el);
+ requestAnimationFrame(function(){el.classList.add('on');});
+ if(s.kind==='move'){setTimeout(function(){el.querySelectorAll('.tok.neg').forEach(function(tok){tok.classList.add(tok.dataset.l==='n'?'fly-dn':'fly-up');});},200);setTimeout(function(){el.querySelector('.math').innerHTML=s.after;},1400);}
+ else if(s.kind==='simp'&&s.after){setTimeout(function(){el.querySelector('.math').innerHTML=s.after;el.querySelectorAll('.tok').forEach(function(tok){tok.classList.add('pop');});},900);}
 }
-function play(i){
- var s=G.steps[i],box=document.getElementById('m'+i);if(!s||!box)return;
- if(s.kind==='move'){box.querySelectorAll('.tok.neg').forEach(function(el){el.classList.add(el.dataset.l==='n'?'fly-dn':'fly-up');});setTimeout(function(){box.innerHTML=s.after;},720);}
- else if(s.kind==='simp'&&s.after){setTimeout(function(){box.innerHTML=s.after;box.querySelectorAll('.tok').forEach(function(el){el.classList.add('merge');});},500);}
-}
-function boot(){gen();paint(false);}
+function boot(){gen();document.getElementById('col').innerHTML='';addCard(G.steps[0]);G.i=1;}
+function next(){if(G.i<G.steps.length){addCard(G.steps[G.i]);G.i++;}}
 document.getElementById('filt').onclick=function(e){var b=e.target.closest('button');if(!b)return;FILT=b.dataset.t;[].forEach.call(document.querySelectorAll('#filt button'),function(x){x.classList.toggle('active',x===b);});boot();};
 document.getElementById('new').onclick=boot;
-document.getElementById('next').onclick=function(){if(G.i<G.steps.length){G.i++;paint(true);}};
-document.getElementById('all').onclick=function(){G.i=G.steps.length;paint(false);G.steps.forEach(function(s,i){var box=document.getElementById('m'+i);if(s.after)box.innerHTML=s.after;});};
+document.getElementById('next').onclick=next;
+document.getElementById('all').onclick=function(){var col=document.getElementById('col');col.innerHTML='';G.steps.forEach(function(s){var el=document.createElement('div');el.className='eqbox on'+(s.kind==='ans'?' ans':'');el.innerHTML='<div class="lab">'+s.lab+'</div><div class="math">'+(s.after||s.html)+'</div>';col.appendChild(el);});G.i=G.steps.length;};
 boot();
 </script>
 </body>
